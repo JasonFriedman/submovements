@@ -23,10 +23,10 @@ for k=2:numsubmovements
    D1  = parameters((k-2)*4+2);
    t02 = parameters((k-1)*4+1);
    D2  = parameters((k-1)*4+2);
-   
+
    if t02 > t01 + D1
        overlaps(k-1) = 0;
    else
-       overlaps(k-1) = (t01 + D1 - t02) / (t02 + D2 - t01) * 100;
+       overlaps(k-1) = min([(t01 + D1 - t02) / (t02 + D2 - t01) * 100, 100]);
    end
 end
