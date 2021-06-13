@@ -2,8 +2,10 @@
 websave('master.zip',...
     'https://github.com/JasonFriedman/submovements/archive/refs/heads/master.zip');
 unzip('master.zip');
+% Change to the directory
+cd('submovements-master');
 % Add the code directory to the path
-addpath('code');
+addpath('matlab');
 
 %% Step 2: load the data
 
