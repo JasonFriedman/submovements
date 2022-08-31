@@ -90,11 +90,13 @@ if any(lb_0>ub_0)
     error('Lower bounds exceed upper bound - infeasible');
 end
 
-% As in Roher & Hogan 2006, select 10 random parameter selections
+% In Roher & Hogan 2006, they selected 10 random parameter selections
+% Here we use 20 (increases a lot the likelihood to converge to the same
+% solution on multiple runs)
 count=1;
-while count<=10
+while count<=20
     for i=1:numsubmovements
-        % Randomly select 10 starting positions in the legal range
+        % Randomly select 20 starting positions in the legal range
         initialparameters(1,i*pps-(pps-1):i*pps) = lb_0 + (ub_0-lb_0) .* rand(1,pps);
         thislb_0 = lb_0;
         thislb_0(1) = (i-1)*0.167;
