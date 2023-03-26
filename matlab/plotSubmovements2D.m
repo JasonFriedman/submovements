@@ -2,8 +2,8 @@
 %
 % plotSubmovements2D(parameters,t,plottype,x0,y0)
 %
-% The parameters should in sets of 4 for each submovements:
-% [t0 D Ax Ax]
+% The parameters should in sets of 4 for each submovement:
+% [t0 D Ax Ay]
 %
 %
 % plottype:
