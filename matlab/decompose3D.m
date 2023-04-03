@@ -80,7 +80,7 @@ end
     
 
 bestError = inf;
-ignoreerrors = false;
+ignoreerrors = true;
 
 % parameters are T0, D, Ax Ay, Az
 % ranges are
@@ -101,7 +101,7 @@ end
 % Here we use 20 (increases a lot the likelihood to converge to the same
 % solution on multiple runs)
 count=1;
-while count<=1 %20
+while count<=20
     for i=1:numsubmovements
         % Randomly select 20 starting positions in the legal range
         initialparameters(1,i*pps-(pps-1):i*pps) = lb_0 + (ub_0-lb_0) .* rand(1,pps);
