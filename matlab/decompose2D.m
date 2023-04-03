@@ -60,7 +60,7 @@ if isempty(numsubmovements) || length(numsubmovements)>1
     bestError = NaN * ones(1,max(numsubmovements)); bestParameters = cell(1,max(numsubmovements)); bestVelocity = cell(1,max(numsubmovements));
     
     for k=numsubmovements
-        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose2(time,vel,k,xrng,yrng);
+        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose2D(time,vel,k,xrng,yrng);
     end
     return;
 end
