@@ -2,7 +2,7 @@ function [epsilon,grad,hess,sumpredicted,predictedx,predictedy,predictedz] = cal
 % CALCULATEERRORMJ3D - calculate the error between the predicted and actual profile (in 3D)
 % The predicted trajectory consists of the superposition of one or more minimum jerk velocity profiles
 %
-% [epsilon,grad,hess,sumpredicted,predictedx,predictedy,predictedz] =  calculateerrorxy(parameters,time,vel,tangvel,timedelta)
+% [epsilon,grad,hess,sumpredicted,predictedx,predictedy,predictedz] =  calculateerrorMJ3D(parameters,time,vel,tangvel,timedelta)
 %
 % The error is defined by (xvel - xpred)^2 + (yvel-ypred)^2 + (zvel-zpred)^2 + (tangvel - tangpred)^2
 %
@@ -66,6 +66,7 @@ predictedy = zeros(numsubmovements,length(time));
 predictedz = zeros(numsubmovements,length(time));
 predicted = zeros(numsubmovements,length(time));
 
+
 Jx= zeros(numsubmovements,5*numsubmovements,length(time));
 Jy= zeros(numsubmovements,5*numsubmovements,length(time));
 Jz= zeros(numsubmovements,5*numsubmovements,length(time));
@@ -85,19 +86,19 @@ for k=1:numsubmovements
     Az = parameters(k*5);
     
     % find the appropriate time to calculate this over (T0 <= t <= T0+D)
-    thisrng = find(time>T0 & time<T0+D);
+    thisrng = find(time>=T0 & time<=T0+D);
     
     if nargout==1
-        [predictedx(k,thisrng),predictedy(k,thisrng),predicted(k,thisrng)] ...
+        [predictedx(k,thisrng),predictedy(k,thisrng),predictedz(k,thisrng),predicted(k,thisrng)] ...
             = minimumJerkVelocity3D(T0,D,Ax,Ay,Az,time(thisrng));
     elseif nargout==2
-        [predictedx(k,thisrng),predictedy(k,thisrng),predicted(k,thisrng),...
-            Jx(k,k*5-4:k*5,thisrng),Jy(k,k*5-4:k*5,thisrng),J(k,k*5-4:k*5,thisrng)] ...
+        [predictedx(k,thisrng),predictedy(k,thisrng),predictedz(k,thisrng),predicted(k,thisrng),...
+            Jx(k,k*5-4:k*5,thisrng),Jy(k,k*5-4:k*5,thisrng),Jz(k,k*5-4:k*5,thisrng),J(k,k*5-4:k*5,thisrng)] ...
             = minimumJerkVelocity3D(T0,D,Ax,Ay,Az,time(thisrng));
     else
-        [predictedx(k,thisrng),predictedy(k,thisrng),predicted(k,thisrng),...
-            Jx(k,k*5-4:k*5,thisrng),Jy(k,k*5-4:k*5,thisrng),J(k,k*5-4:k*5,thisrng),...
-            Hx(k,k*5-4:k*5,k*5-4:k*5,thisrng),Hy(k,k*5-4:k*5,k*5-4:k*5,thisrng),H(k,k*5-4:k*5,k*5-4:k*5,thisrng)] ...
+        [predictedx(k,thisrng),predictedy(k,thisrng),predictedz(k,thisrng),predicted(k,thisrng),...
+            Jx(k,k*5-4:k*5,thisrng),Jy(k,k*5-4:k*5,thisrng),Jz(k,k*5-4:k*5,thisrng),J(k,k*5-4:k*5,thisrng),...
+            Hx(k,k*5-4:k*5,k*5-4:k*5,thisrng),Hy(k,k*5-4:k*5,k*5-4:k*5,thisrng),Hz(k,k*5-4:k*5,k*5-4:k*5,thisrng),H(k,k*5-4:k*5,k*5-4:k*5,thisrng)] ...
             = minimumJerkVelocity3D(T0,D,Ax,Ay,Az,time(thisrng));
     end
 end

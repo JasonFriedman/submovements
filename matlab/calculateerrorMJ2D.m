@@ -2,7 +2,7 @@ function [epsilon,grad,hess,sumpredicted,predictedx,predictedy] = calculateerror
 % CALCULATEERRORMJ2D - calculate the error between the predicted and actual profile (in 2D)
 % The predicted trajectory consists of the superposition of one or more minimum jerk velocity profiles
 %
-% [epsilon,grad,hess,sumpredicted,predictedx,predictedy] =  calculateerrorxy(parameters,time,vel,tangvel,timedelta)
+% [epsilon,grad,hess,sumpredicted,predictedx,predictedy] =  calculateerrorMJ2D(parameters,time,vel,tangvel,timedelta)
 %
 % The error is defined by (xvel - xpred)^2 + (yvel-ypred)^2 + (tangvel - tangpred)^2
 %
