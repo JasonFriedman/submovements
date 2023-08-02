@@ -1,7 +1,7 @@
 function x = minimumJerkPosition1D(t0,D,A,x0,t)
 % minimumJerkPosition1D - evaluate a 1D minimum jerk curve
 %
-% x = minimumJerkVelocity1D(t0,D,A,x0,t)
+% x = minimumJerkPosition1D(t0,D,A,x0,t)
 %
 % see Flash and Hogan (1985) for details on the minimum jerk equation
 %

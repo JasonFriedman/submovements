@@ -1,7 +1,7 @@
 function [x,y] = minimumJerkPosition2D(t0,D,Ax,Ay,x0,y0,t)
 % minimumJerkPosition2D - evaluate a 2D minimum jerk curve
 %
-% [x,y] = minimumJerkVelocity2D(t0,D,Ax,Ay,x0,y0,t)
+% [x,y] = minimumJerkPosition2D(t0,D,Ax,Ay,x0,y0,t)
 %
 % see Flash and Hogan (1985) for details on the minimum jerk equation
 %
