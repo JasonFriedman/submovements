@@ -74,7 +74,7 @@ end
     
 
 bestError = inf;
-ignoreerrors = false;
+ignoreerrors = true;
 
 % parameters are T0, D, Ax Ay
 % ranges are
@@ -83,7 +83,7 @@ ignoreerrors = false;
 % xrng(1) <= Ax <= xrng(2)
 % yrng(1) <= Ay <= yrng(2)
 lb_0 = [0                           0.167     xrng(1) yrng(1)];
-ub_0 = [max([time(end)-0.167 0.1]) 1.0       xrng(2) yrng(2)];
+ub_0 = [max([time(end)-0.167 0.1])  1.0       xrng(2) yrng(2)];
 pps = 4; % parameters per submovement
 
 if any(lb_0>ub_0)
@@ -93,15 +93,31 @@ end
 % In Roher & Hogan 2006, they selected 10 random parameter selections
 % Here we use 20 (increases a lot the likelihood to converge to the same
 % solution on multiple runs)
+toignore = 0;
+for i=1:numsubmovements
+    thislb_0 = lb_0;
+    thislb_0(1) = (i-1)*0.167;
+    if thislb_0(1) > ub_0(1)
+        fprintf(['The submovements are assumed to be spaced by at least 167 ms, this movement is not long enough for ' num2str(i) ' submovements so will be set to NaN\n']);
+        toignore = 1;
+        break;
+    end
+    lb(i*pps-(pps-1):i*pps) = thislb_0;
+    ub(i*pps-(pps-1):i*pps) = ub_0;
+end
+
+if toignore
+    bestError = NaN;
+    bestParameters = NaN;
+    bestVelocity = NaN;
+    return;
+end
+
 count=1;
 while count<=20
     for i=1:numsubmovements
         % Randomly select 20 starting positions in the legal range
         initialparameters(1,i*pps-(pps-1):i*pps) = lb_0 + (ub_0-lb_0) .* rand(1,pps);
-        thislb_0 = lb_0;
-        thislb_0(1) = (i-1)*0.167;
-        lb(i*pps-(pps-1):i*pps) = thislb_0;
-        ub(i*pps-(pps-1):i*pps) = ub_0;
     end
     v = vel(:,1:2);
     tv = sqrt(vel(:,1).^2 + vel(:,2).^2);
