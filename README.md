@@ -10,4 +10,5 @@ The file [sample.m](matlab/sample.m) gives an example of how to use the toolkit
 ## Python
 The [Juyptr](python/run_example.ipynb) notebook gives an example of how to use the python code
 
+## Background
 An older version of the (Matlab) code with more explanation can be found [here](https://noisyaccumulation.blogspot.com/2012/02/how-to-decompose-2d-trajectory-data.html)
