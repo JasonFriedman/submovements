@@ -1,7 +1,7 @@
-function [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmovements,xrng,yrng)
+function [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmovements,xrng,yrng,criteria)
 % DECOMPOSE - decompose two dimensional movement into submovements using the velocity profiles
 %
-% [best,bestParameters,bestVelocity] = decompose(time,vel,numsubmovements,xrng,yrng)
+% [best,bestParameters,bestVelocity] = decompose(time,vel,numsubmovements,xrng,yrng,criteria)
 %
 % vel should be a N x 2 matrix, with the x and y velocities
 %
@@ -15,6 +15,10 @@ function [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmo
 % yrng is the valid range for the amplitude of y values (default = [0.1 5])
 %
 % min(t0) = 0.167 * submovement number
+%
+% criteria - stop if the bestError is less than the criteria (only relevant
+% when numsubmovements is a vector of multiple values). This can save time
+% by not checking for a higher number of submovements
 %
 %
 % bestError the best (lowest) value of the error function
@@ -40,6 +44,10 @@ if nargin<5 || isempty(yrng)
     yrng = [0.1 5];
 end
 
+if nargin<6 || isempty(criteria)
+    criteria = -inf;
+end
+
 if size(time,2)>1
     error('time must be a N*1 vector');
 end
@@ -59,8 +67,11 @@ if isempty(numsubmovements) || length(numsubmovements)>1
     end
     bestError = NaN * ones(1,max(numsubmovements)); bestParameters = cell(1,max(numsubmovements)); bestVelocity = cell(1,max(numsubmovements));
     
-    for k=numsubmovements
-        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose2D(time,vel,k,xrng,yrng);
+    for k=1:numel(numsubmovements)
+        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose2D(time,vel,numsubmovements(k),xrng,yrng);
+        if bestError(k)<criteria
+            return
+        end
     end
     return;
 end
