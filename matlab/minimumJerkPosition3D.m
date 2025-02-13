@@ -1,4 +1,4 @@
-function [x,y] = minimumJerkPosition3D(t0,D,Ax,Ay,Az,x0,y0,z0,t)
+function [x,y,z] = minimumJerkPosition3D(t0,D,Ax,Ay,Az,x0,y0,z0,t)
 % minimumJerkPosition3D - evaluate a 3D minimum jerk curve
 %
 % [x,y,z] = minimumJerkPosition3D(t0,D,Ax,Ay,Az,x0,y0,z0,t)

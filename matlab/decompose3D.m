@@ -170,7 +170,7 @@ t0 = bestParameters(1:pps:end-4);
 D  = bestParameters(2:pps:end-3);
 Ax = bestParameters(3:pps:end-2);
 Ay = bestParameters(4:pps:end-1);
-Az = bestParameters(4:pps:end);
+Az = bestParameters(5:pps:end);
 
 [~,order] = sort(t0);
 t0 = t0(order);
