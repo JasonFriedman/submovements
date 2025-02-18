@@ -1,7 +1,7 @@
-function [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng)
-% DECOMPOSE - decompose three dimensional movement into submovements using the velocity profiles
+function [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
+% DECOMPOSE3D - decompose three dimensional movement into submovements using the velocity profiles
 %
-% [best,bestParameters,bestVelocity] = decompose(time,vel,numsubmovements,xrng,yrng,zrng)
+% [best,bestParameters,bestVelocity] = decompose(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
 %
 % vel should be a N x 3 matrix, with the x, y and z velocities
 %
@@ -18,6 +18,9 @@ function [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmo
 %
 % min(t0) = 0.167 * submovement number
 %
+% criteria - stop if the bestError is less than the criteria (only relevant
+% when numsubmovements is a vector of multiple values). This can save time
+% by not checking for a higher number of submovements
 %
 % bestError the best (lowest) value of the error function
 %
@@ -27,7 +30,7 @@ function [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmo
 %
 % bestVelocity is the velocity profile coresponding to the best values
 
-% Jason Friedman, 2023
+% Jason Friedman, 2024
 % www.curiousjason.com
 
 if nargin<3
@@ -44,6 +47,10 @@ end
 
 if nargin<6 || isempty(zrng)
     zrng = [-5 5];
+end
+
+if nargin<7 || isempty(criteria)
+    criteria = -inf;
 end
 
 if size(time,2)>1
@@ -65,10 +72,13 @@ if isempty(numsubmovements) || length(numsubmovements)>1
     end
     bestError = NaN * ones(1,max(numsubmovements)); bestParameters = cell(1,max(numsubmovements)); bestVelocity = cell(1,max(numsubmovements));
     
-    for k=numsubmovements
-        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose3D(time,vel,k,xrng,yrng,zrng);
+    for k=1:numel(numsubmovements)
+        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose3D(time,vel,numsubmovements(k),xrng,yrng,zrng);
+        if bestError(k)<criteria
+            return
+        end
     end
-    return;
+    return
 end
 
 if numel(time)==0
@@ -97,6 +107,26 @@ if any(lb_0>ub_0)
     error('Lower bounds exceed upper bound - infeasible');
 end
 
+toignore = 0;
+for i=1:numsubmovements
+    thislb_0 = lb_0;
+    thislb_0(1) = (i-1)*0.167;
+    if thislb_0(1) > ub_0(1)
+        fprintf(['The submovements are assumed to be spaced by at least 167 ms, this movement is not long enough for ' num2str(i) ' submovements so will be set to NaN\n']);
+        toignore = 1;
+        break;
+    end
+    lb(i*pps-(pps-1):i*pps) = thislb_0;
+    ub(i*pps-(pps-1):i*pps) = ub_0;
+end
+
+if toignore
+    bestError = NaN;
+    bestParameters = NaN;
+    bestVelocity = NaN;
+    return;
+end
+
 % In Roher & Hogan 2006, they selected 10 random parameter selections
 % Here we use 20 (increases a lot the likelihood to converge to the same
 % solution on multiple runs)
@@ -105,11 +135,7 @@ while count<=20
     for i=1:numsubmovements
         % Randomly select 20 starting positions in the legal range
         initialparameters(1,i*pps-(pps-1):i*pps) = lb_0 + (ub_0-lb_0) .* rand(1,pps);
-        thislb_0 = lb_0;
-        thislb_0(1) = (i-1)*0.167;
-        lb(i*pps-(pps-1):i*pps) = thislb_0;
-        ub(i*pps-(pps-1):i*pps) = ub_0;
-    end
+        end
     v = vel(:,1:3);
     tv = sqrt(vel(:,1).^2 + vel(:,2).^2 + vel(:,3).^2);
     % Turn on GradObj and Hessian to use the gradient and Hessian
@@ -166,11 +192,11 @@ while count<=20
 end
 
 % Sort the parameters according to t0
-t0 = bestParameters(1:pps:end-4);
-D  = bestParameters(2:pps:end-3);
-Ax = bestParameters(3:pps:end-2);
-Ay = bestParameters(4:pps:end-1);
-Az = bestParameters(5:pps:end);
+t0 = bestParameters(1:pps:end-pps+1);
+D  = bestParameters(2:pps:end-pps+2);
+Ax = bestParameters(3:pps:end-pps+3);
+Ay = bestParameters(4:pps:end-pps+4);
+Az = bestParameters(5:pps:end-pps+5);
 
 [~,order] = sort(t0);
 t0 = t0(order);
@@ -179,8 +205,8 @@ Ax = Ax(order);
 Ay = Ay(order);
 Az = Az(order);
 
-bestParameters(1:pps:end-4) = t0;
-bestParameters(2:pps:end-3) = D;
-bestParameters(3:pps:end-2) = Ax;
-bestParameters(4:pps:end-1) = Ay;
-bestParameters(5:pps:end)   = Az;
+bestParameters(1:pps:end-pps+1) = t0;
+bestParameters(2:pps:end-pps+2) = D;
+bestParameters(3:pps:end-pps+3) = Ax;
+bestParameters(4:pps:end-pps+4) = Ay;
+bestParameters(5:pps:end-pps+5) = Az;

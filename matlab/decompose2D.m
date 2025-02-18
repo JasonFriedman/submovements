@@ -1,5 +1,5 @@
 function [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmovements,xrng,yrng,criteria)
-% DECOMPOSE - decompose two dimensional movement into submovements using the velocity profiles
+% DECOMPOSE2D - decompose two dimensional movement into submovements using the velocity profiles
 %
 % [best,bestParameters,bestVelocity] = decompose(time,vel,numsubmovements,xrng,yrng,criteria)
 %
@@ -73,7 +73,7 @@ if isempty(numsubmovements) || length(numsubmovements)>1
             return
         end
     end
-    return;
+    return
 end
 
 if numel(time)==0
@@ -101,9 +101,6 @@ if any(lb_0>ub_0)
     error('Lower bounds exceed upper bound - infeasible');
 end
 
-% In Roher & Hogan 2006, they selected 10 random parameter selections
-% Here we use 20 (increases a lot the likelihood to converge to the same
-% solution on multiple runs)
 toignore = 0;
 for i=1:numsubmovements
     thislb_0 = lb_0;
@@ -124,6 +121,9 @@ if toignore
     return;
 end
 
+% In Roher & Hogan 2006, they selected 10 random parameter selections
+% Here we use 20 (increases a lot the likelihood to converge to the same
+% solution on multiple runs)
 count=1;
 while count<=20
     for i=1:numsubmovements
@@ -186,10 +186,10 @@ while count<=20
 end
 
 % Sort the parameters according to t0
-t0 = bestParameters(1:pps:end-3);
-D = bestParameters(2:pps:end-2);
-Ax = bestParameters(3:pps:end-1);
-Ay = bestParameters(4:pps:end);
+t0 = bestParameters(1:pps:end-pps+1);
+D  = bestParameters(2:pps:end-pps+2);
+Ax = bestParameters(3:pps:end-pps+3);
+Ay = bestParameters(4:pps:end-pps+4);
 
 [~,order] = sort(t0);
 t0 = t0(order);
@@ -197,7 +197,7 @@ D = D(order);
 Ax = Ax(order);
 Ay = Ay(order);
 
-bestParameters(1:pps:end-3) = t0;
-bestParameters(2:pps:end-2) = D;
-bestParameters(3:pps:end-1) = Ax;
-bestParameters(4:pps:end) = Ay;
+bestParameters(1:pps:end-pps+1) = t0;
+bestParameters(2:pps:end-pps+2) = D;
+bestParameters(3:pps:end-pps+3) = Ax;
+bestParameters(4:pps:end-pps+4) = Ay;
