@@ -1,7 +1,7 @@
 function [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
 % DECOMPOSE3D - decompose three dimensional movement into submovements using the velocity profiles
 %
-% [best,bestParameters,bestVelocity] = decompose(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
+% [best,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
 %
 % vel should be a N x 3 matrix, with the x, y and z velocities
 %
@@ -70,7 +70,7 @@ if isempty(numsubmovements) || length(numsubmovements)>1
     if isempty(numsubmovements)
         numsubmovements = 1:4;
     end
-    bestError = NaN * ones(1,max(numsubmovements)); bestParameters = cell(1,max(numsubmovements)); bestVelocity = cell(1,max(numsubmovements));
+    bestError = NaN * ones(1,numel(numsubmovements)); bestParameters = cell(1,numel(numsubmovements)); bestVelocity = cell(1,numel(numsubmovements));
     
     for k=1:numel(numsubmovements)
         [bestError(k),bestParameters{k},bestVelocity{k}] = decompose3D(time,vel,numsubmovements(k),xrng,yrng,zrng);
@@ -135,7 +135,7 @@ while count<=20
     for i=1:numsubmovements
         % Randomly select 20 starting positions in the legal range
         initialparameters(1,i*pps-(pps-1):i*pps) = lb_0 + (ub_0-lb_0) .* rand(1,pps);
-        end
+    end
     v = vel(:,1:3);
     tv = sqrt(vel(:,1).^2 + vel(:,2).^2 + vel(:,3).^2);
     % Turn on GradObj and Hessian to use the gradient and Hessian
@@ -154,7 +154,6 @@ while count<=20
         try
             result = fmincon(@(parameters) calculateerrorMJ3D(parameters,time,v,tv,time(2)-time(1)),initialparameters,[],[],[],[],lb,ub,[],options);
             [epsilon,~,~,fitresult] = calculateerrorMJ3D(result,time,v,tv,time(2)-time(1));
-            
             
             if ~isreal(result(1))
                 error('Found an imaginary value');
@@ -176,7 +175,6 @@ while count<=20
     else
         result = fmincon(@(parameters) calculateerrorMJ3D(parameters,time,v,tv,time(2)-time(1)),initialparameters,[],[],[],[],lb,ub,[],options);
         [epsilon,~,~,fitresult] = calculateerrorMJ3D(result,time,v,tv,time(2)-time(1));
-        
         
         if ~isreal(result(1))
             error('Found an imaginary value');

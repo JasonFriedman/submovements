@@ -18,7 +18,7 @@ function [Bx,By,Bz,B,Jx,Jy,Jz,J,Hx,Hy,Hz,H] = minimumJerkVelocity3D(t0,D,Ax,Ay,A
 % Jx, Jy, Jz and J are the gradients (partial derivatives) of the same quantities
 % Hx, Hy, Hz and H are the Hessian (second-order partial derivatives)
 %
-% [Bx,By,Bz,B,Jx,Jy,Jz,J,Hx,Hy,Hz,H] = MJxy(t0,D,Ax,Ay,Az,t)
+% [Bx,By,Bz,B,Jx,Jy,Jz,J,Hx,Hy,Hz,H] = minimumJerkVelocity3D(t0,D,Ax,Ay,Az,t)
 
 % Jason Friedman, 2023
 % www.curiousjason.com
