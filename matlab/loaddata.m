@@ -8,7 +8,6 @@ if isempty(d)
     error('Must specify a directory to load the csv files from');
 end
 
-clear block trial
 for k=1:numel(d)
    filename{k} = d(k).name; 
    r = regexp(filename{k},'tb_.*block(\d*)_trial(\d*).csv','tokens');

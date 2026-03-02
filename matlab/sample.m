@@ -1,6 +1,6 @@
 % Example script to download and decompose data to submovements 
 
-%% Step 1: Download the source code and data from github and unzip it
+%% Step 1: Download the source code and data from GitHub and unzip it
 websave('master.zip',...
     'https://github.com/JasonFriedman/submovements/archive/refs/heads/master.zip');
 unzip('master.zip');
@@ -9,7 +9,7 @@ cd('submovements-master');
 % Add the code directory to the path
 addpath('matlab');
 
-%% Step 2: load the data
+%% Step 2: Load the data
 
 [position,velocity,time] = loaddata('data/subject08day1pre/');
 
@@ -29,7 +29,7 @@ xrng = [-20 20];
 yrng = [-10 10];
 
 k=1;
-[bestError1,bestParameters1,bestVelocity1] = decompose2D(time{k},velocity{k},numsubmovements,xrng,yrng);
+[~,bestParameters1,~] = decompose2D(time{k},velocity{k},numsubmovements,xrng,yrng);
 
 % Q: how many parameters are there in total?
 % Q: What are the units of the parameters?
@@ -60,10 +60,10 @@ plot(position{k}(:,1),position{k}(:,2),'b--','LineWidth',2);
 % Q: How well did the reconstruction match the original movement and does
 % this differ for position and velocity. Why?
 
-%% Step 6: Run the decompisition on all trials in the condition 
+%% Step 6: Run the decomposition on all trials in the condition 
 % (get a coffee!)
 for k=1:numel(time)
-    k
+    fprintf('Pre trial %d/%d\n',k,numel(time));
     [bestError(k),bestParameters(k,:),bestVelocity{k}] = decompose2D(time{k},velocity{k},numsubmovements,xrng,yrng);
 end
 
@@ -87,51 +87,51 @@ end
 % overlap and relative onset time
 %
 % overlap: mean percent overlap between two submovements
-overlapsPre = calculateOverlap(bestParameters); 
+calculateOverlap(bestParameters); 
 
 % relative onset time: time 2-4th submovement starts relative to duration
 % of previous submovement
 
-relativeOnsetsPre  = calculateRelativeOnset(bestParameters);
+calculateRelativeOnset(bestParameters);
 
 %% Step 9: Run the decomposition on the posttest and compare to the pretest
-[positionPost,velocityPost,timePost] = loaddata('data/subject08day1post/');
+[~,velocityPost,timePost] = loaddata('data/subject08day1post/');
 % (get another coffee!)
 for k=1:numel(timePost)
-    k
+    fprintf('Post trial %d/%d\n',k,numel(timePost));
     [bestErrorPost(k),bestParametersPost(k,:),bestVelocityPost{k}] = decompose2D(timePost{k},velocityPost{k},numsubmovements,xrng,yrng);
 end
 
-overlapsPost = calculateOverlap(bestParametersPost);
-relativeOnsetsPost  = calculateRelativeOnset(bestParametersPost);
+calculateOverlap(bestParametersPost);
+calculateRelativeOnset(bestParametersPost);
 
 % Q: Is there a difference between the pre and post?
 
 
 %% Step 10: Compare results to a subject from the observation group (34)
-[positionPre2,velocityPre2,timePre2] = loaddata('data/subject34day1pre/');
+[~,velocityPre2,timePre2] = loaddata('data/subject34day1pre/');
 % (get another coffee!)
 for k=1:numel(timePre2)
-    k
+    fprintf('Obs pre trial %d/%d\n',k,numel(timePre2));
     [bestErrorPre2(k),bestParametersPre2(k,:),bestVelocityPre2{k}] = decompose2D(timePre2{k},velocityPre2{k},numsubmovements,xrng,yrng);
 end
 
-overlapsPre2 = calculateOverlap(bestParametersPre2);
-relativeOnsetsPre2  = calculateRelativeOnset(bestParametersPre2);
+calculateOverlap(bestParametersPre2);
+calculateRelativeOnset(bestParametersPre2);
 
 %%
 
-[positionPost2,velocityPost2,timePost2] = loaddata('data/subject34day1post/');
+[~,velocityPost2,timePost2] = loaddata('data/subject34day1post/');
 % (get another coffee!)
 for k=1:numel(timePost2)
-    k
+    fprintf('Obs post trial %d/%d\n',k,numel(timePost2));
     [bestErrorPost2(k),bestParametersPost2(k,:),bestVelocityPost2{k}] = decompose2D(timePost2{k},velocityPost2{k},numsubmovements,xrng,yrng);
 end
 
-overlapsPost2 = calculateOverlap(bestParametersPost2); 
-relativeOnsetsPost2  = calculateRelativeOnset(bestParametersPost2);
+calculateOverlap(bestParametersPost2); 
+calculateRelativeOnset(bestParametersPost2);
 
-% Q: For this subbject, is there a different between pre and post?
+% Q: For this subject, is there a difference between pre and post?
 % What does this suggest about differences in coarticulation between
 % the groups? 
 % (Disclaimer: A proper analysis would of course look at all subjects

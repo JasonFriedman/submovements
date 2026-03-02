@@ -1,6 +1,6 @@
 % CALCULATERELATIVEONSET - Calculate relative onset time of the submovements
 %
-% relativeonset = calculateRelativeOnset(parameters) 
+% relativeOnset = calculateRelativeOnset(parameters) 
 %
 % Values > 100% indicate that the 2nd submovement started after the 
 % first one finished
@@ -25,7 +25,6 @@ for k=2:numsubmovements
    t01 = parameters((k-2)*4+1);
    D1  = parameters((k-2)*4+2);
    t02 = parameters((k-1)*4+1);
-   D2  = parameters((k-1)*4+2);
    
    relativeOnsets(k-1) = (t02 - t01) / D1 * 100;
 end
