@@ -81,17 +81,6 @@ if isempty(numsubmovements) || length(numsubmovements)>1
     return
 end
 
-if numel(time)==0
-    bestError = NaN;
-    bestParameters = NaN(1,numsubmovements*5);
-    bestVelocity = NaN;
-    return
-end
-    
-
-bestError = inf;
-ignoreerrors = true;
-
 % parameters are T0, D, Ax Ay, Az
 % ranges are
 % 0 <= T0 <= finaltime - 0.167
@@ -103,108 +92,17 @@ lb_0 = [0                           0.167     xrng(1) yrng(1) zrng(1)];
 ub_0 = [max([time(end)-0.167 0.1])  1.0       xrng(2) yrng(2) zrng(2)];
 pps = 5; % parameters per submovement
 
-if any(lb_0>ub_0)
-    error('Lower bounds exceed upper bound - infeasible');
-end
-
-toignore = 0;
-for i=1:numsubmovements
-    thislb_0 = lb_0;
-    thislb_0(1) = (i-1)*0.167;
-    if thislb_0(1) > ub_0(1)
-        fprintf(['The submovements are assumed to be spaced by at least 167 ms, this movement is not long enough for ' num2str(i) ' submovements so will be set to NaN\n']);
-        toignore = 1;
-        break;
-    end
-    lb(i*pps-(pps-1):i*pps) = thislb_0;
-    ub(i*pps-(pps-1):i*pps) = ub_0;
-end
-
-if toignore
+if numel(time)==0
     bestError = NaN;
-    bestParameters = NaN;
+    bestParameters = NaN(1,numsubmovements*5);
     bestVelocity = NaN;
-    return;
+    return
 end
 
-% In Roher & Hogan 2006, they selected 10 random parameter selections
-% Here we use 20 (increases a lot the likelihood to converge to the same
-% solution on multiple runs)
-count=1;
-while count<=20
-    for i=1:numsubmovements
-        % Randomly select 20 starting positions in the legal range
-        initialparameters(1,i*pps-(pps-1):i*pps) = lb_0 + (ub_0-lb_0) .* rand(1,pps);
-    end
-    v = vel(:,1:3);
-    tv = sqrt(vel(:,1).^2 + vel(:,2).^2 + vel(:,3).^2);
-    % Turn on GradObj and Hessian to use the gradient and Hessian
-    % calculated in the functions
-    options = optimset('GradObj','on','Hessian','on',...
-        'algorithm','trust-region-reflective','LargeScale','on',...
-        'MaxFunEvals',10^13,'MaxIter',5000,...
-        'display','notify',...
-        'FunValCheck','on','DerivativeCheck','off');
-    % DerivativeCheck can be set to on when you want to make sure that your
-    % analytically calculated derivative agree with the derivatives
-    % calculated using finite differences
-    
-    % Run this part in a try loop because occasionally it crashes with some Matlab versions
-    if ignoreerrors
-        try
-            result = fmincon(@(parameters) calculateerrorMJ3D(parameters,time,v,tv,time(2)-time(1)),initialparameters,[],[],[],[],lb,ub,[],options);
-            [epsilon,~,~,fitresult] = calculateerrorMJ3D(result,time,v,tv,time(2)-time(1));
-            
-            if ~isreal(result(1))
-                error('Found an imaginary value');
-            end
-            
-            if epsilon < bestError
-                bestError = epsilon;
-                bestParameters = result;
-                bestVelocity = fitresult;
-            end
-            
-        catch exception
-            % occasionally there are errors for reasons that are not clear, let
-            % us just ignore them [seem to have gone away now]
-            fprintf(['Got a strange error: ' exception.message ' in file ' exception.stack(1).name ' on line ' num2str(exception.stack(1).line) ', ignoring\n']);
-            count = count-1;
-        end
-        count = count+1;
-    else
-        result = fmincon(@(parameters) calculateerrorMJ3D(parameters,time,v,tv,time(2)-time(1)),initialparameters,[],[],[],[],lb,ub,[],options);
-        [epsilon,~,~,fitresult] = calculateerrorMJ3D(result,time,v,tv,time(2)-time(1));
-        
-        if ~isreal(result(1))
-            error('Found an imaginary value');
-        end
-        
-        if epsilon < bestError
-            bestError = epsilon;
-            bestParameters = result;
-            bestVelocity = fitresult;
-        end
-        count = count+1;
-    end
-end
+v = vel(:,1:3);
+tv = sqrt(vel(:,1).^2 + vel(:,2).^2 + vel(:,3).^2);
+timedelta = time(2)-time(1);
 
-% Sort the parameters according to t0
-t0 = bestParameters(1:pps:end-pps+1);
-D  = bestParameters(2:pps:end-pps+2);
-Ax = bestParameters(3:pps:end-pps+3);
-Ay = bestParameters(4:pps:end-pps+4);
-Az = bestParameters(5:pps:end-pps+5);
-
-[~,order] = sort(t0);
-t0 = t0(order);
-D = D(order);
-Ax = Ax(order);
-Ay = Ay(order);
-Az = Az(order);
-
-bestParameters(1:pps:end-pps+1) = t0;
-bestParameters(2:pps:end-pps+2) = D;
-bestParameters(3:pps:end-pps+3) = Ax;
-bestParameters(4:pps:end-pps+4) = Ay;
-bestParameters(5:pps:end-pps+5) = Az;
+[bestError,bestParameters,bestVelocity] = decomposeND(...
+    time,numsubmovements,lb_0,ub_0,pps,...
+    @(parameters) calculateerrorMJ3D(parameters,time,v,tv,timedelta));

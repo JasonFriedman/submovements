@@ -36,11 +36,8 @@ end
 
 % nt is normalized time (0 <= nt <= 1)
 x = zeros(1,numel(t));
-nt = (t-t0)./D;
-r = (nt>=0 & nt<=1);
-before = nt<0;
-after = nt>1;
-x(r) = A * (-15 * nt(r).^4 + 6 * nt(r).^5 + 10 * nt(r).^3) + x0;
+[~,r,before,after,positionBasis] = minimumJerkBasis(t0,D,t);
+x(r) = A * positionBasis(r) + x0;
 x(before) = x0;
 x(after) = x0+A;
 

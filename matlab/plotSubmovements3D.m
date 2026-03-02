@@ -17,10 +17,6 @@
 
 function plotSubmovements3D(parameters,t,plottype,x0,y0,z0)
 
-if mod(numel(parameters),5)~=0
-    error('The parameters vector must have a length that is a multiple of 5');
-end
-
 if nargin<3 || isempty(plottype)
     plottype=1;
 end
@@ -37,45 +33,24 @@ if nargin<6 || isempty(z0)
     z0 = 0;
 end
 
-numSubmovements = numel(parameters)/5;
-t0 = parameters(1:5:end-4);
-D =  parameters(2:5:end-3);
-Ax = parameters(3:5:end-2);
-Ay = parameters(4:5:end-1);
-Az = parameters(5:5:end);
-
-% sort according to t0
-[~,order] = sort(t0);
-t0 = t0(order);
-D = D(order);
-Ax = Ax(order);
-Ay = Ay(order);
-Az = Az(order);
-
-x0(2:numSubmovements) = x0 + cumsum(Ax(1:end-1));
-y0(2:numSubmovements) = y0 + cumsum(Ay(1:end-1));
-z0(2:numSubmovements) = z0 + cumsum(Az(1:end-1));
-
-tf = t0+D;
-
 if nargin<2 || isempty(t)
-    t = linspace(min(t0),max(tf),100);
+    t = [];
 end
 
-for s = 1:numSubmovements    
-    [vx(s,:),vy(s,:),vz(s,:)] = minimumJerkVelocity3D(t0(s),D(s),Ax(s),Ay(s),Az(s),t);
-    [x(s,:),y(s,:),z(s,:)] = minimumJerkPosition3D(t0(s),D(s),Ax(s),Ay(s),Az(s),x0(s),y0(s),z0(s),t);
-end
-
-x_relative(1,:) = x(1,:); y_relative(1,:) = y(1,:); z_relative(1,:) = z(1,:);
-for s=2:numSubmovements
-    x_relative(s,:) = x(s,:) - x0(s);
-    y_relative(s,:) = y(s,:) - y0(s);
-    z_relative(s,:) = z(s,:) - z0(s);
-end
-x_sum = sum(x_relative);
-y_sum = sum(y_relative);
-z_sum = sum(z_relative);
+data = prepareSubmovementKinematics(parameters,3,t,[x0 y0 z0]);
+t = data.t;
+t0 = data.t0;
+D = data.D;
+numSubmovements = data.numSubmovements;
+vx = reshape(data.vel(:,:,1),numSubmovements,[]);
+vy = reshape(data.vel(:,:,2),numSubmovements,[]);
+vz = reshape(data.vel(:,:,3),numSubmovements,[]);
+x = reshape(data.pos(:,:,1),numSubmovements,[]);
+y = reshape(data.pos(:,:,2),numSubmovements,[]);
+z = reshape(data.pos(:,:,3),numSubmovements,[]);
+x_sum = data.sumPos(:,1)';
+y_sum = data.sumPos(:,2)';
+z_sum = data.sumPos(:,3)';
 
 if any(plottype==1:2)
     h(1:3:numSubmovements*3-2) = plot(t,vx,'b');

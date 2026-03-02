@@ -1,5 +1,5 @@
 function [Bx,By,Bz,B,Jx,Jy,Jz,J,Hx,Hy,Hz,H] = minimumJerkVelocity3D(t0,D,Ax,Ay,Az,t)
-% minimumJerkVelocity3D - evaluate a minimum jerk velocity curve with seperate displacement for xyz
+% minimumJerkVelocity3D - evaluate a minimum jerk velocity curve with separate displacement for xyz
 %
 % see Flash and Hogan (1985) for details on the minimum jerk equation
 %
@@ -48,15 +48,14 @@ Bx = zeros(1,numel(t));
 By = zeros(1,numel(t));
 Bz = zeros(1,numel(t));
 B = zeros(1,numel(t));
-nt = (t-t0)./D;
-r = (nt>=0 & nt<=1);
+[nt,r,~,~,~,velocityBasis] = minimumJerkBasis(t0,D,t);
 
-Bx(r) = Ax/D * (-60 * nt(r).^3 + 30 * nt(r).^4 + 30 * nt(r).^2);
-By(r) = Ay/D * (-60 * nt(r).^3 + 30 * nt(r).^4 + 30 * nt(r).^2);
-Bz(r) = Az/D * (-60 * nt(r).^3 + 30 * nt(r).^4 + 30 * nt(r).^2);
+Bx(r) = Ax/D * velocityBasis(r);
+By(r) = Ay/D * velocityBasis(r);
+Bz(r) = Az/D * velocityBasis(r);
 
 A_tang = sqrt((Ax/D).^2 + (Ay/D).^2 + (Az/D).^2);
-B(r) = A_tang * (-60 * nt(r).^3 + 30 * nt(r).^4 + 30 * nt(r).^2);
+B(r) = A_tang * velocityBasis(r);
 
 if nargout > 3
     Jx = zeros(5,numel(t));

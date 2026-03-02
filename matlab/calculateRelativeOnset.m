@@ -1,6 +1,6 @@
 % CALCULATERELATIVEONSET - Calculate relative onset time of the submovements
 %
-% relativeOnset = calculateRelativeOnset(parameters) 
+% relativeOnsets = calculateRelativeOnset(parameters) 
 %
 % Values > 100% indicate that the 2nd submovement started after the 
 % first one finished

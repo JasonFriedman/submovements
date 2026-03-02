@@ -17,10 +17,6 @@
 
 function plotSubmovements2D(parameters,t,plottype,x0,y0)
 
-if mod(numel(parameters),4)~=0
-    error('The parameters vector must have a length that is a multiple of 4');
-end
-
 if nargin<3 || isempty(plottype)
     plottype=1;
 end
@@ -33,40 +29,21 @@ if nargin<5 || isempty(y0)
     y0 = 0;
 end
 
-numSubmovements = numel(parameters)/4;
-t0 = parameters(1:4:end-3);
-D = parameters(2:4:end-2);
-Ax = parameters(3:4:end-1);
-Ay = parameters(4:4:end);
-
-% sort according to t0
-[~,order] = sort(t0);
-t0 = t0(order);
-D = D(order);
-Ax = Ax(order);
-Ay = Ay(order);
-
-x0(2:numSubmovements) = x0 + cumsum(Ax(1:end-1));
-y0(2:numSubmovements) = y0 + cumsum(Ay(1:end-1));
-
-tf = t0+D;
-
 if nargin<2 || isempty(t)
-    t = linspace(min(t0),max(tf),100);
+    t = [];
 end
 
-for s = 1:numSubmovements    
-    [vx(s,:),vy(s,:)] = minimumJerkVelocity2D(t0(s),D(s),Ax(s),Ay(s),t);
-    [x(s,:),y(s,:)] = minimumJerkPosition2D(t0(s),D(s),Ax(s),Ay(s),x0(s),y0(s),t);
-end
-
-x_relative(1,:) = x(1,:); y_relative(1,:) = y(1,:);
-for s=2:numSubmovements
-    x_relative(s,:) = x(s,:) - x0(s);
-    y_relative(s,:) = y(s,:) - y0(s);
-end
-x_sum = sum(x_relative);
-y_sum = sum(y_relative);
+data = prepareSubmovementKinematics(parameters,2,t,[x0 y0]);
+t = data.t;
+t0 = data.t0;
+D = data.D;
+numSubmovements = data.numSubmovements;
+vx = reshape(data.vel(:,:,1),numSubmovements,[]);
+vy = reshape(data.vel(:,:,2),numSubmovements,[]);
+x = reshape(data.pos(:,:,1),numSubmovements,[]);
+y = reshape(data.pos(:,:,2),numSubmovements,[]);
+x_sum = data.sumPos(:,1)';
+y_sum = data.sumPos(:,2)';
 
 if any(plottype==1:2)
     h(1:2:numSubmovements*2-1) = plot(t,vx,'b');

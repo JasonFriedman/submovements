@@ -37,9 +37,8 @@ end
 
 % nt is normalized time (0 <= nt <= 1)
 B = zeros(1,numel(t));
-nt = (t-t0)./D;
-r = (nt>=0 & nt<=1);
-B(r) = A/D * (-60 * nt(r).^3 + 30 * nt(r).^4 + 30 * nt(r).^2);
+[nt,r,~,~,~,velocityBasis] = minimumJerkBasis(t0,D,t);
+B(r) = A/D * velocityBasis(r);
 
 if nargout > 1
     J = zeros(3,numel(t));
