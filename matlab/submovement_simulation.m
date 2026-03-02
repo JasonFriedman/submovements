@@ -1,30 +1,5 @@
 function varargout = submovement_simulation(varargin)
-% SUBMOVEMENT_SIMULATION MATLAB code for submovement_simulation.fig
-%      SUBMOVEMENT_SIMULATION, by itself, creates a new SUBMOVEMENT_SIMULATION or raises the existing
-%      singleton*.
-%
-%      H = SUBMOVEMENT_SIMULATION returns the handle to a new SUBMOVEMENT_SIMULATION or the handle to
-%      the existing singleton*.
-%
-%      SUBMOVEMENT_SIMULATION('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in SUBMOVEMENT_SIMULATION.M with the given input arguments.
-%
-%      SUBMOVEMENT_SIMULATION('Property','Value',...) creates a new SUBMOVEMENT_SIMULATION or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before submovement_simulation_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to submovement_simulation_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Edit the above text to modify the response to help submovement_simulation
-
-% Last Modified by GUIDE v2.5 09-Jun-2021 23:57:46
-
-% Begin initialization code - DO NOT EDIT
+% SUBMOVEMENT_SIMULATION Run submovement simulations
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...

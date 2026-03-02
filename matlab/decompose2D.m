@@ -1,7 +1,7 @@
 function [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmovements,xrng,yrng,criteria)
 % DECOMPOSE2D - decompose two dimensional movement into submovements using the velocity profiles
 %
-% [bestError,bestParameters,bestVelocity] = decompose(time,vel,numsubmovements,xrng,yrng,criteria)
+% [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmovements,xrng,yrng,criteria)
 %
 % vel should be a N x 2 matrix, with the x and y velocities
 %

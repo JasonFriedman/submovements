@@ -6,7 +6,7 @@ function [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwin
 %
 % vel should be a N x 3 matrix, with the x, y and z velocities
 %
-% t should be a N x 1 matrix with the corresponding time (in seconds)
+% time should be a N x 1 matrix with the corresponding time (in seconds)
 %
 % submovementRange is the number of submovements to look for, if it is
 % empty or not specified, the function will try 1:4 submovements
@@ -26,14 +26,14 @@ function [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwin
 %
 % windowSize - duration of the window (in seconds) - default is 3 seconds
 %
-% bestError the best (lowest) value of the error function (cell array - one
+% bestErrors - the best (lowest) value of the error function (cell array - one
 % per window)
 %
 % bestParameters contains the function parameters corresponding to the best values
-% [t0 D Ax Ay Az]. If there are multiple submovements, it will be have a
+% [t0 D Ax Ay Az]. If there are multiple submovements, it will have a
 % length of 5*numsubmovements (cell array - one per window)
 %
-% bestVelocity is the velocity profile coresponding to the best values
+% bestVelocity is the velocity profile corresponding to the best values
 % (cell array - one per window)
 %
 % decomposition - is a struct with a summary of the fits, with fields:
