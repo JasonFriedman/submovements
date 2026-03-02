@@ -2,28 +2,29 @@ function [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwin
 % DECOMPOSE3DWINDOWS - decompose three dimensional movement into submovements using the velocity profiles
 % divided into windows (useful for long duration movements)
 %
-% [best,bestParameters,bestVelocity] = decompose3Dwindows(time,vel,submovementRange,xrng,yrng,zrng,criteria,windowSize)
+% [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwindows(time,vel,submovementRange,xrng,yrng,zrng,criteria,windowSize)
 %
 % vel should be a N x 3 matrix, with the x, y and z velocities
 %
 % t should be a N x 1 matrix with the corresponding time (in seconds)
 %
 % submovementRange is the number of submovements to look for, if it is
-% empty or not specified, the function will try 1 to 4 submovements
+% empty or not specified, the function will try 1:4 submovements
 %
 % xrng is the valid range for the amplitude of x values (default = [-5 5])
 %
 % yrng is the valid range for the amplitude of y values (default = [0.1 5])
 %
-% zrng is the valid range for the amplitude of y values (default = [-5 5])
+% zrng is the valid range for the amplitude of z values (default = [-5 5])
 %
 % min(t0) = 0.167 * submovement number
 %
 % criteria - stop if the bestError is less than the criteria (only relevant
 % when numsubmovements is a vector of multiple values). This can save time
-% by not checking for a higher number of submovements
+% by not checking for a higher number of submovements. Default is -inf
+% (i.e. don't use), reasonable values could be 0.01-0.05
 %
-% window size - duration of the window (in seconds) - default is 3 seconds
+% windowSize - duration of the window (in seconds) - default is 3 seconds
 %
 % bestError the best (lowest) value of the error function (cell array - one
 % per window)
@@ -36,9 +37,10 @@ function [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwin
 % (cell array - one per window)
 %
 % decomposition - is a struct with a summary of the fits, with fields:
-% t0s, Ds, Axs, Ays, Azs, endtimes, time, vel, startwindows
+% t0s, Ds, Axs, Ays, Azs, endtimes, time, vel, startwindows,
+% submovementVelocity, reconstructedVelocity
 
-% Jason Friedman, 2025
+% Jason Friedman, 2026
 % www.curiousjason.com
 
 if nargin<3
@@ -83,12 +85,12 @@ leftover = mod(time(end)-time(1),windowSize);
 % if the last window is less than half the window size, just add it to the previous window
 if leftover > 0.5
     numwindows = ceil( (time(end)-time(1))/windowSize);
-    startwindows = 0:windowSize:windowSize*(numwindows-1);
+    startwindows = time(1):windowSize:time(1)+windowSize*(numwindows-1);
     endwindows = startwindows + windowSize;
     endwindows(end) = time(end);
 else
     numwindows = ceil( (time(end)-time(1))/windowSize)-1;
-    startwindows = 0:windowSize:windowSize*(numwindows-1);
+    startwindows = time(1):windowSize:time(1)+windowSize*(numwindows-1);
     endwindows = startwindows + windowSize;
     endwindows(end) = time(end);
 end
@@ -161,3 +163,14 @@ decomposition.endtimes = endtimes;
 decomposition.time = time;
 decomposition.vel = vel;
 decomposition.startwindows = startwindows;
+
+for k=numel(decomposition.t0s):-1:1
+    [decomposition.submovementsVelocity(:,k,1),decomposition.submovementsVelocity(:,k,2),...
+        decomposition.submovementsVelocity(:,k,3)] = ...
+        minimumJerkVelocity3D(...
+        decomposition.t0s(k),decomposition.Ds(k),...
+        decomposition.Axs(k),decomposition.Ays(k),...
+        decomposition.Azs(k),...
+        time);
+end
+decomposition.reconstructedVelocity = squeeze(sum(decomposition.submovementsVelocity,2));

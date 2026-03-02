@@ -15,7 +15,10 @@ function [x,y,z] = minimumJerkPosition3D(t0,D,Ax,Ay,Az,x0,y0,z0,t)
 %    z0 = starting position (y)
 %
 % The function is evaluated at times t
-% Only value of t0 < t < t0 + D will be evaluated (rest will be zero)
+% Only value of t0 <= t <= t0 + D will be evaluated
+% Earlier and later values will be set to x0 and x0 + Ax respectively for x
+% and y0 and y0 + Ay respectively for y
+% and z0 and z0 + Az respectively for z
 %
 
 % Jason Friedman, 2021

@@ -1,3 +1,5 @@
+% LOADDATA - load position and velocity data from the csv files
+% This is for the test program
 function [positionfiltered,velocity,time] = loaddata(dirname)
 
 d = dir([dirname '/*.csv']);

@@ -1,7 +1,7 @@
 function [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
 % DECOMPOSE3D - decompose three dimensional movement into submovements using the velocity profiles
 %
-% [best,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
+% [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
 %
 % vel should be a N x 3 matrix, with the x, y and z velocities
 %
@@ -14,7 +14,7 @@ function [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmo
 %
 % yrng is the valid range for the amplitude of y values (default = [0.1 5])
 %
-% zrng is the valid range for the amplitude of y values (default = [-5 5])
+% zrng is the valid range for the amplitude of z values (default = [-5 5])
 %
 % min(t0) = 0.167 * submovement number
 %

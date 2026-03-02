@@ -1,3 +1,5 @@
+% Example script to download and decompose data to submovements 
+
 %% Step 1: Download the source code and data from github and unzip it
 websave('master.zip',...
     'https://github.com/JasonFriedman/submovements/archive/refs/heads/master.zip');

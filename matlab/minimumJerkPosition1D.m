@@ -11,7 +11,8 @@ function x = minimumJerkPosition1D(t0,D,A,x0,t)
 %    x0 = starting position
 %
 % The function is evaluated at times t
-% Only value of t0 < t < t0 + D will be evaluated (rest will be zero)
+% Only value of t0 <= t <= t0 + D will be evaluated 
+% Earlier and later values will be set to x0 and x0 + A respectively
 %
 
 % Jason Friedman, 2021

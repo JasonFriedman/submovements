@@ -1,11 +1,11 @@
 function [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmovements,xrng,yrng,criteria)
 % DECOMPOSE2D - decompose two dimensional movement into submovements using the velocity profiles
 %
-% [best,bestParameters,bestVelocity] = decompose(time,vel,numsubmovements,xrng,yrng,criteria)
+% [bestError,bestParameters,bestVelocity] = decompose(time,vel,numsubmovements,xrng,yrng,criteria)
 %
 % vel should be a N x 2 matrix, with the x and y velocities
 %
-% t should be a N x 1 matrix with the corresponding time (in seconds)
+% time should be a N x 1 matrix with the corresponding time (in seconds)
 %
 % numsubmovements is the number of submovements to look for, if it is
 % empty or not specified, the function will try 1 to 4 submovements
@@ -24,10 +24,10 @@ function [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmo
 % bestError the best (lowest) value of the error function
 %
 % bestParameters contains the function parameters corresponding to the best values
-% [t0 D Ax Ay]. If there are multiple submovements, it will be have a
+% [t0 D Ax Ay]. If there are multiple submovements, it will have a
 % length of 4*numsubmovements
 %
-% bestVelocity is the velocity profile coresponding to the best values
+% bestVelocity is the velocity profile corresponding to the best values
 
 % Jason Friedman, 2021
 % www.curiousjason.com

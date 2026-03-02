@@ -13,7 +13,9 @@ function [x,y] = minimumJerkPosition2D(t0,D,Ax,Ay,x0,y0,t)
 %    y0 = starting position (y)
 %
 % The function is evaluated at times t
-% Only value of t0 < t < t0 + D will be evaluated (rest will be zero)
+% Only value of t0 <= t <= t0 + D will be evaluated 
+% Earlier and later values will be set to x0 and x0 + Ax respectively for x
+% and y0 and y0 + Ay respectively for y
 %
 
 % Jason Friedman, 2021

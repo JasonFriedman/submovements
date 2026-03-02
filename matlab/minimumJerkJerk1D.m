@@ -7,10 +7,10 @@ function j = minimumJerkJerk1D(t0,D,A,t)
 %
 %    t0 = movement start time
 %    D  = movement duration
-%    Ax = displacement resulting from the movement
+%    A = displacement resulting from the movement
 %
 % The function is evaluated at times t
-% Only value of t0 < t < t0 + D will be evaluated (rest will be zero)
+% Only value of t0 <= t <= t0 + D will be evaluated (rest will be zero)
 
 % Jason Friedman, 2024
 % www.curiousjason.com

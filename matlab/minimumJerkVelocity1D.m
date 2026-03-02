@@ -7,17 +7,17 @@ function [B,J,H] = minimumJerkVelocity1D(t0,D,A,t)
 %
 %    t0 = movement start time
 %    D  = movement duration
-%    Ax = displacement resulting from the movement
+%    A = displacement resulting from the movement
 %
 % The function is evaluated at times t
-% Only value of t0 < t < t0 + D will be evaluated (rest will be zero)
+% Only value of t0 <= t <= t0 + D will be evaluated (rest will be zero)
 %
 % The function also optionally returns the first-order and second-order
 % partial derivatives, for use with optimization routines
 %
 % B is the velocity
-% J is the gradient (partial derivatives)
-% H is the Hessian (second-order partial derivatives)
+% J is the gradient (partial derivatives) with size 3*N where N is the number of time points
+% H is the Hessian (second-order partial derivatives) with size 3*3*N where N is the number of time points
 
 % Jason Friedman, 2021
 % www.curiousjason.com
