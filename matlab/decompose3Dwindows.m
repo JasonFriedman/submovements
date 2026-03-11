@@ -1,4 +1,4 @@
-function [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwindows(time,vel,submovementRange,xrng,yrng,zrng,criteria,windowSize)
+function [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwindows(time,vel,submovementRange,xrng,yrng,zrng,criteria,windowSize,fittingConstraints)
 % DECOMPOSE3DWINDOWS - decompose three dimensional movement into submovements using the velocity profiles
 % divided into windows (useful for long duration movements)
 %
@@ -67,6 +67,10 @@ if nargin<8 || isempty(windowSize)
     windowSize = 3; % seconds
 end
 
+if nargin<9 || isempty(fittingConstraints)
+    fittingConstraints = struct();
+end
+
 if size(time,2)>1
     error('time must be a N*1 vector');
 end
@@ -120,7 +124,7 @@ for w=1:numwindows
     end
 
     % decompose3D requires the time to start at zero, so subtract it here, then add it back on afterwards
-    [bestErrors{w},bestParameters{w},bestVelocity{w}] = decompose3D(thistime-thistime(1),thisvel,submovementRange,xrng,yrng,zrng,criteria);
+    [bestErrors{w},bestParameters{w},bestVelocity{w}] = decompose3D(thistime-thistime(1),thisvel,submovementRange,xrng,yrng,zrng,criteria,fittingConstraints);
     submovementInd = find(bestErrors{w}<=criteria,1);
     if isempty(submovementInd)
         submovementInd = find(bestErrors{w}<=0.05,1);

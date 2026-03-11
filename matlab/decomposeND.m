@@ -1,5 +1,11 @@
-function [bestError,bestParameters,bestVelocity] = decomposeND(time,numsubmovements,lb_0,ub_0,parametersPerSubmovement,errorFunction)
+function [bestError,bestParameters,bestVelocity] = decomposeND(time,numsubmovements,lb_0,ub_0,parametersPerSubmovement,errorFunction,fittingConstraints)
 % DECOMPOSEND - shared decomposition engine for 2D/3D minimum jerk models
+
+if nargin<7
+    fittingConstraints = struct();
+end
+
+constraints = resolveFittingConstraints(fittingConstraints);
 
 if numel(time)==0
     bestError = NaN;
@@ -18,7 +24,7 @@ end
 toignore = false;
 for i=1:numsubmovements
     thislb_0 = lb_0;
-    thislb_0(1) = (i-1)*0.167;
+    thislb_0(1) = (i-1)*constraints.minOnsetSpacing;
     if thislb_0(1) > ub_0(1)
         fprintf(['The submovements are assumed to be spaced by at least 167 ms, this movement is not long enough for ' num2str(i) ' submovements so will be set to NaN\n']);
         toignore = true;
@@ -36,7 +42,7 @@ if toignore
 end
 
 count=1;
-while count<=20
+while count<=constraints.numRestarts
     for i=1:numsubmovements
         initialparameters(1,i*parametersPerSubmovement-(parametersPerSubmovement-1):i*parametersPerSubmovement) = ...
             lb_0 + (ub_0-lb_0) .* rand(1,parametersPerSubmovement);
@@ -44,7 +50,7 @@ while count<=20
 
     options = optimset('GradObj','on','Hessian','on',...
         'algorithm','trust-region-reflective','LargeScale','on',...
-        'MaxFunEvals',10^13,'MaxIter',5000,...
+        'MaxFunEvals',constraints.maxFunEvals,'MaxIter',constraints.maxIter,...
         'display','notify',...
         'FunValCheck','on','DerivativeCheck','off');
 

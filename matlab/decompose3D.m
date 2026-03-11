@@ -1,4 +1,4 @@
-function [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
+function [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng,criteria,fittingConstraints)
 % DECOMPOSE3D - decompose three dimensional movement into submovements using the velocity profiles
 %
 % [bestError,bestParameters,bestVelocity] = decompose3D(time,vel,numsubmovements,xrng,yrng,zrng,criteria)
@@ -53,6 +53,12 @@ if nargin<7 || isempty(criteria)
     criteria = -inf;
 end
 
+if nargin<8 || isempty(fittingConstraints)
+    fittingConstraints = struct();
+end
+
+constraints = resolveFittingConstraints(fittingConstraints);
+
 if size(time,2)>1
     error('time must be a N*1 vector');
 end
@@ -73,7 +79,7 @@ if isempty(numsubmovements) || length(numsubmovements)>1
     bestError = NaN * ones(1,numel(numsubmovements)); bestParameters = cell(1,numel(numsubmovements)); bestVelocity = cell(1,numel(numsubmovements));
     
     for k=1:numel(numsubmovements)
-        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose3D(time,vel,numsubmovements(k),xrng,yrng,zrng);
+        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose3D(time,vel,numsubmovements(k),xrng,yrng,zrng,criteria,fittingConstraints);
         if bestError(k)<criteria
             return
         end
@@ -83,13 +89,13 @@ end
 
 % parameters are T0, D, Ax Ay, Az
 % ranges are
-% 0 <= T0 <= finaltime - 0.167
-% 0.167 <= D <= finaltime
+% 0 <= T0 <= finaltime - minOnsetSpacing
+% minDuration <= D <= finaltime
 % xrng(1) <= Ax <= xrng(2)
 % yrng(1) <= Ay <= yrng(2)
 % zrng(1) <= Az <= zrng(2)
-lb_0 = [0                           0.167     xrng(1) yrng(1) zrng(1)];
-ub_0 = [max([time(end)-0.167 0.1])  1.0       xrng(2) yrng(2) zrng(2)];
+lb_0 = [0                                                            constraints.minDuration      xrng(1) yrng(1) zrng(1)];
+ub_0 = [max([time(end)-constraints.minOnsetSpacing constraints.minUpperBoundTime])  constraints.maxDuration  xrng(2) yrng(2) zrng(2)];
 pps = 5; % parameters per submovement
 
 if numel(time)==0
@@ -105,4 +111,4 @@ timedelta = time(2)-time(1);
 
 [bestError,bestParameters,bestVelocity] = decomposeND(...
     time,numsubmovements,lb_0,ub_0,pps,...
-    @(parameters) calculateerrorMJ3D(parameters,time,v,tv,timedelta));
+    @(parameters) calculateerrorMJ3D(parameters,time,v,tv,timedelta),fittingConstraints);

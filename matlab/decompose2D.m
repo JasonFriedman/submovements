@@ -1,4 +1,4 @@
-function [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmovements,xrng,yrng,criteria)
+function [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmovements,xrng,yrng,criteria,fittingConstraints)
 % DECOMPOSE2D - decompose two dimensional movement into submovements using the velocity profiles
 %
 % [bestError,bestParameters,bestVelocity] = decompose2D(time,vel,numsubmovements,xrng,yrng,criteria)
@@ -48,6 +48,12 @@ if nargin<6 || isempty(criteria)
     criteria = -inf;
 end
 
+if nargin<7 || isempty(fittingConstraints)
+    fittingConstraints = struct();
+end
+
+constraints = resolveFittingConstraints(fittingConstraints);
+
 if size(time,2)>1
     error('time must be a N*1 vector');
 end
@@ -68,7 +74,7 @@ if isempty(numsubmovements) || length(numsubmovements)>1
     bestError = NaN * ones(1,max(numsubmovements)); bestParameters = cell(1,max(numsubmovements)); bestVelocity = cell(1,max(numsubmovements));
     
     for k=1:numel(numsubmovements)
-        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose2D(time,vel,numsubmovements(k),xrng,yrng);
+        [bestError(k),bestParameters{k},bestVelocity{k}] = decompose2D(time,vel,numsubmovements(k),xrng,yrng,criteria,fittingConstraints);
         if bestError(k)<criteria
             return
         end
@@ -78,12 +84,12 @@ end
 
 % parameters are T0, D, Ax Ay
 % ranges are
-% 0 <= T0 <= finaltime - 0.167
-% 0.167 <= D <= finaltime
+% 0 <= T0 <= finaltime - minOnsetSpacing
+% minDuration <= D <= finaltime
 % xrng(1) <= Ax <= xrng(2)
 % yrng(1) <= Ay <= yrng(2)
-lb_0 = [0                           0.167     xrng(1) yrng(1)];
-ub_0 = [max([time(end)-0.167 0.1])  1.0       xrng(2) yrng(2)];
+lb_0 = [0                                                            constraints.minDuration      xrng(1) yrng(1)];
+ub_0 = [max([time(end)-constraints.minOnsetSpacing constraints.minUpperBoundTime])  constraints.maxDuration  xrng(2) yrng(2)];
 pps = 4; % parameters per submovement
 
 v = vel(:,1:2);
@@ -91,4 +97,4 @@ tv = sqrt(vel(:,1).^2 + vel(:,2).^2);
 
 [bestError,bestParameters,bestVelocity] = decomposeND(...
     time,numsubmovements,lb_0,ub_0,pps,...
-    @(parameters) calculateerrorMJ2D(parameters,time,v,tv));
+    @(parameters) calculateerrorMJ2D(parameters,time,v,tv),fittingConstraints);
