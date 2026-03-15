@@ -1,21 +1,17 @@
-function [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwindows(time,vel,submovementRange,xrng,yrng,zrng,criteria,windowSize,fittingConstraints)
-% DECOMPOSE3DWINDOWS - decompose three dimensional movement into submovements using the velocity profiles
+function [bestErrors,bestParameters,bestVelocity,decomposition] = decompose1Dwindows(time,vel,submovementRange,arng,criteria,windowSize,fittingConstraints)
+% DECOMPOSE1DWINDOWS - decompose one dimensional movement into submovements using the velocity profile
 % divided into windows (useful for long duration movements)
 %
-% [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwindows(time,vel,submovementRange,xrng,yrng,zrng,criteria,windowSize)
+% [bestErrors,bestParameters,bestVelocity,decomposition] = decompose1Dwindows(time,vel,submovementRange,arng,criteria,windowSize)
 %
-% vel should be a N x 3 matrix, with the x, y and z velocities
+% vel should be a N x 1 vector with the velocity profile
 %
-% time should be a N x 1 matrix with the corresponding time (in seconds)
+% time should be a N x 1 vector with the corresponding time (in seconds)
 %
 % submovementRange is the number of submovements to look for, if it is
 % empty or not specified, the function will try 1:4 submovements
 %
-% xrng is the valid range for the amplitude of x values (default = [-5 5])
-%
-% yrng is the valid range for the amplitude of y values (default = [0.1 5])
-%
-% zrng is the valid range for the amplitude of z values (default = [-5 5])
+% arng is the valid range for the amplitude values (default = [-5 5])
 %
 % min(t0) = 0.167 * submovement number
 %
@@ -33,14 +29,14 @@ function [bestErrors,bestParameters,bestVelocity,decomposition] = decompose3Dwin
 % per window)
 %
 % bestParameters contains the function parameters corresponding to the best values
-% [t0 D Ax Ay Az]. If there are multiple submovements, it will have a
-% length of 5*numsubmovements (cell array - one per window)
+% [t0 D A]. If there are multiple submovements, it will have a
+% length of 3*numsubmovements (cell array - one per window)
 %
 % bestVelocity is the velocity profile corresponding to the best values
 % (cell array - one per window)
 %
 % decomposition - is a struct with a summary of the fits, with fields:
-% t0s, Ds, Axs, Ays, Azs, endtimes, time, vel, startwindows, endwindows,
+% t0s, Ds, As, endtimes, time, vel, startwindows, endwindows,
 % submovementVelocity, reconstructedVelocity
 
 % Jason Friedman, 2026
@@ -50,27 +46,19 @@ if nargin<3
     submovementRange = 1:4;
 end
 
-if nargin<4 || isempty(xrng)
-    xrng = [-5 5];
+if nargin<4 || isempty(arng)
+    arng = [-5 5];
 end
 
-if nargin<5 || isempty(yrng)
-    yrng = [0.1 5];
-end
-
-if nargin<6 || isempty(zrng)
-    zrng = [-5 5];
-end
-
-if nargin<7 || isempty(criteria)
+if nargin<5 || isempty(criteria)
     criteria = -inf;
 end
 
-if nargin<8 || isempty(windowSize)
+if nargin<6 || isempty(windowSize)
     windowSize = 3; % seconds
 end
 
-if nargin<9 || isempty(fittingConstraints)
+if nargin<7 || isempty(fittingConstraints)
     fittingConstraints = struct();
 end
 
@@ -78,20 +66,18 @@ if size(time,2)>1
     error('time must be a N*1 vector');
 end
 
-if size(vel,2) ~= 3 || size(vel,1)==3
-    error('velocity must be an N*3 matrix (it is a %d by %d matrix)',size(vel,1),size(vel,2));
+if size(vel,2) ~= 1
+    error('velocity must be an N*1 vector (it is a %d by %d matrix)',size(vel,1),size(vel,2));
 end
 
 if size(time,1) ~= size(vel,1)
-    error('The length of the time vector (%d * %d) and the velocity matrix (%d * %d) must be equal',...
+    error('The length of the time vector (%d * %d) and the velocity vector (%d * %d) must be equal',...
         size(time,1),size(time,2),size(vel,1),size(vel,2));
 end
 
 t0s = [];
 Ds =  [];
-Axs = [];
-Ays = [];
-Azs = [];
+As = [];
 endtimes = [];
 startwindows = [];
 endwindows = [];
@@ -116,15 +102,13 @@ while currentWindowStart < time(end)
     % subtract any previously accepted submovements that overlap this window
     for k=1:numel(endtimes)
         if endtimes(k) > currentWindowStart
-            [thisMJx,thisMJy,thisMJz] = minimumJerkVelocity3D(t0s(k),Ds(k),Axs(k),Ays(k),Azs(k),thistime);
-            thisvel(:,1) = thisvel(:,1) - thisMJx';
-            thisvel(:,2) = thisvel(:,2) - thisMJy';
-            thisvel(:,3) = thisvel(:,3) - thisMJz';
+            thisMJ = minimumJerkVelocity1D(t0s(k),Ds(k),As(k),thistime);
+            thisvel(:,1) = thisvel(:,1) - thisMJ';
         end
     end
 
-    % decompose3D requires the time to start at zero, so subtract it here, then add it back on afterwards
-    [windowErrors,windowParameters,windowVelocity] = decompose3D(thistime-thistime(1),thisvel,submovementRange,xrng,yrng,zrng,criteria,fittingConstraints);
+    % decompose1D requires the time to start at zero, so subtract it here, then add it back on afterwards
+    [windowErrors,windowParameters,windowVelocity] = decompose1D(thistime-thistime(1),thisvel,submovementRange,arng,criteria,fittingConstraints);
     submovementInd = find(windowErrors<=criteria,1);
     if isempty(submovementInd)
         submovementInd = find(windowErrors<=0.05,1);
@@ -137,14 +121,12 @@ while currentWindowStart < time(end)
     end
     numSubmovements = submovementRange(submovementInd);
 
-    % parameters are [t0 D Ax Ay Az]
+    % parameters are [t0 D A]
     if ~isnan(numSubmovements) && ~isnan(windowParameters{submovementInd}(1))
-        submovementParameters = reshape(windowParameters{submovementInd},5,numSubmovements)';
+        submovementParameters = reshape(windowParameters{submovementInd},3,numSubmovements)';
         thist0s = submovementParameters(:,1) + thistime(1); % put back in the right units
         thisDs = submovementParameters(:,2);
-        thisAxs = submovementParameters(:,3);
-        thisAys = submovementParameters(:,4);
-        thisAzs = submovementParameters(:,5);
+        thisAs = submovementParameters(:,3);
         thisendtimes = thist0s+thisDs;
 
         keepMask = thisendtimes <= currentWindowEnd;
@@ -163,41 +145,34 @@ while currentWindowStart < time(end)
         else
             nextWindowStart = currentWindowEnd;
         end
-
-        acceptedParameters = [thist0s(keepMask) thisDs(keepMask) thisAxs(keepMask) thisAys(keepMask) thisAzs(keepMask)];
-        acceptedLocalParameters = [acceptedParameters(:,1)-thistime(1) acceptedParameters(:,2) acceptedParameters(:,3) acceptedParameters(:,4) acceptedParameters(:,5)];
+        acceptedParameters = [thist0s(keepMask) thisDs(keepMask) thisAs(keepMask)];
+        acceptedLocalParameters = [acceptedParameters(:,1)-thistime(1) acceptedParameters(:,2) acceptedParameters(:,3)];
     else
         acceptedParameters = [];
         acceptedLocalParameters = [];
-        nextWindowStart = currentWindowEnd;
     end
+
 
     if isempty(acceptedParameters)
         bestErrors{w} = NaN;
         bestParameters{w} = [];
-        bestVelocity{w} = zeros(numel(thistime),3);
+        bestVelocity{w} = zeros(size(thistime));
     else
-        currentBestVelocity = zeros(numel(thistime),3);
+        currentBestVelocity = zeros(size(thistime));
         for k=1:size(acceptedLocalParameters,1)
-            [thisVx,thisVy,thisVz] = minimumJerkVelocity3D(...
-                acceptedLocalParameters(k,1),acceptedLocalParameters(k,2),...
-                acceptedLocalParameters(k,3),acceptedLocalParameters(k,4),acceptedLocalParameters(k,5),...
-                thistime-thistime(1));
-            currentBestVelocity(:,1) = currentBestVelocity(:,1) + thisVx';
-            currentBestVelocity(:,2) = currentBestVelocity(:,2) + thisVy';
-            currentBestVelocity(:,3) = currentBestVelocity(:,3) + thisVz';
+            currentBestVelocity = currentBestVelocity + minimumJerkVelocity1D(...
+                acceptedLocalParameters(k,1),acceptedLocalParameters(k,2),acceptedLocalParameters(k,3),...
+                thistime-thistime(1))';
         end
-        currentBestError = sum(sum((currentBestVelocity - thisvel).^2,2)) / max(sum(sum(thisvel.^2,2)),1);
+        currentBestError = sum((currentBestVelocity - thisvel).^2) / max(sum(thisvel.^2),1);
 
         bestErrors{w} = currentBestError;
         bestParameters{w} = reshape(acceptedParameters',1,[]);
         bestVelocity{w} = currentBestVelocity;
 
-        t0s      = [t0s;acceptedParameters(:,1)];
-        Ds       = [Ds;acceptedParameters(:,2)];
-        Axs      = [Axs;acceptedParameters(:,3)];
-        Ays      = [Ays;acceptedParameters(:,4)];
-        Azs      = [Azs;acceptedParameters(:,5)];
+        t0s = [t0s;acceptedParameters(:,1)];
+        Ds = [Ds;acceptedParameters(:,2)];
+        As = [As;acceptedParameters(:,3)];
         endtimes = [endtimes;acceptedParameters(:,1)+acceptedParameters(:,2)];
     end
 
@@ -219,11 +194,11 @@ while currentWindowStart < time(end)
     end
     currentWindowStart = nextWindowStart;
 end
+
 decomposition.t0s = t0s;
 decomposition.Ds = Ds;
-decomposition.Axs = Axs;
-decomposition.Ays = Ays;
-decomposition.Azs = Azs;
+decomposition.As = As;
+decomposition.parameters = reshape([decomposition.t0s decomposition.Ds decomposition.As]',size(decomposition.t0s,1)*3,1);
 decomposition.endtimes = endtimes;
 decomposition.time = time;
 decomposition.vel = vel;
@@ -231,12 +206,7 @@ decomposition.startwindows = startwindows;
 decomposition.endwindows = endwindows;
 
 for k=numel(decomposition.t0s):-1:1
-    [decomposition.submovementsVelocity(:,k,1),decomposition.submovementsVelocity(:,k,2),...
-        decomposition.submovementsVelocity(:,k,3)] = ...
-        minimumJerkVelocity3D(...
-        decomposition.t0s(k),decomposition.Ds(k),...
-        decomposition.Axs(k),decomposition.Ays(k),...
-        decomposition.Azs(k),...
-        time);
+    decomposition.submovementsVelocity(:,k) = minimumJerkVelocity1D(...
+        decomposition.t0s(k),decomposition.Ds(k),decomposition.As(k),time)';
 end
-decomposition.reconstructedVelocity = squeeze(sum(decomposition.submovementsVelocity,2));
+decomposition.reconstructedVelocity = sum(decomposition.submovementsVelocity,2);
