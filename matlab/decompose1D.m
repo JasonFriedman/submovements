@@ -45,7 +45,9 @@ if nargin<6 || isempty(fittingConstraints)
     fittingConstraints = struct();
 end
 
-constraints = resolveFittingConstraints(fittingConstraints);
+optimizerConstraints = fittingConstraints;
+
+constraints = resolveFittingConstraints(optimizerConstraints);
 
 if size(time,2)>1
     error('time must be a N*1 vector');
@@ -91,6 +93,5 @@ timedelta = time(2)-time(1);
 
 [bestError,bestParameters,bestVelocity] = decomposeND(...
     time,numsubmovements,lb_0,ub_0,pps,...
-    @(parameters) calculateerrorMJ1D(parameters,time,v,timedelta),fittingConstraints);
-
+    @(parameters) calculateerrorMJ1D(parameters,time,v,timedelta),optimizerConstraints);
 end

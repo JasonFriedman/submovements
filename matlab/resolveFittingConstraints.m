@@ -8,6 +8,7 @@ defaults.minUpperBoundTime = 0.1;
 defaults.numRestarts = 20;
 defaults.maxFunEvals = 10^13;
 defaults.maxIter = 5000;
+defaults.minWindowSize = 1; % seconds
 
 if nargin<1 || isempty(overrides)
     constraints = defaults;

@@ -17,11 +17,11 @@ function [epsilon,grad,hess,sumpredicted,predictedx,predictedy,predictedz] = cal
 % each 5 parameters is T0 (onset time in seconds), D (duration in seconds),
 % Ax (x amplitude), Ay (y amplitude) and Az (z amplitude)
 %
-% time should be a 1 * N vector with the time of the recorded movement (in seconds)
+% time should be a N * 1 vector with the time of the recorded movement (in seconds)
 %
 % vel should be an N * 3 vector with the x, y and z velocities
 %
-% tangvel should contain the tangential velocity [i.e. tangvel = sqrt(vel(:,1).^2+vel(:,2).^2)  ]
+% tangvel should contain the tangential velocity [i.e. tangvel = sqrt(vel(:,1).^2+vel(:,2).^2+vel(:,3).^2)  ]
 %
 % timedelta (optional, default = 0.005) is the time points to evaluate and
 % compare the trajectories. It should match the time data [i.e. timedelta=time(2) - time(1)   ]

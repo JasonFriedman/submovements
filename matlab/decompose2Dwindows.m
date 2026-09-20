@@ -68,6 +68,15 @@ if nargin<8 || isempty(fittingConstraints)
     fittingConstraints = struct();
 end
 
+if isfield(fittingConstraints,'minOnsetSpacing') && ~isempty(fittingConstraints.minOnsetSpacing)
+    minOnsetSpacing = fittingConstraints.minOnsetSpacing;
+else
+    minOnsetSpacing = 0.167;
+end
+if minOnsetSpacing<=0
+    error('fittingConstraints.minOnsetSpacing must be > 0');
+end
+
 if size(time,2)>1
     error('time must be a N*1 vector');
 end
@@ -156,7 +165,29 @@ while currentWindowStart < time(end)
         end
 
         acceptedParameters = [thist0s(keepMask) thisDs(keepMask) thisAxs(keepMask) thisAys(keepMask)];
-        acceptedLocalParameters = [acceptedParameters(:,1)-thistime(1) acceptedParameters(:,2) acceptedParameters(:,3) acceptedParameters(:,4)];
+
+        % Enforce onset spacing against already accepted submovements from previous windows.
+        if ~isempty(acceptedParameters)
+            if isempty(t0s)
+                previousOnset = -inf;
+            else
+                previousOnset = t0s(end);
+            end
+            spacingKeep = false(size(acceptedParameters,1),1);
+            for kk=1:size(acceptedParameters,1)
+                if acceptedParameters(kk,1) - previousOnset >= minOnsetSpacing-eps
+                    spacingKeep(kk) = true;
+                    previousOnset = acceptedParameters(kk,1);
+                end
+            end
+            acceptedParameters = acceptedParameters(spacingKeep,:);
+        end
+
+        if isempty(acceptedParameters)
+            acceptedLocalParameters = [];
+        else
+            acceptedLocalParameters = [acceptedParameters(:,1)-thistime(1) acceptedParameters(:,2) acceptedParameters(:,3) acceptedParameters(:,4)];
+        end
     else
         acceptedParameters = [];
         acceptedLocalParameters = [];

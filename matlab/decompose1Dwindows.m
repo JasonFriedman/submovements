@@ -59,7 +59,16 @@ if nargin<6 || isempty(windowSize)
 end
 
 if nargin<7 || isempty(fittingConstraints)
-    fittingConstraints = struct();
+    fittingConstraints = resolveFittingConstraints(struct());
+end
+
+if isfield(fittingConstraints,'minOnsetSpacing') && ~isempty(fittingConstraints.minOnsetSpacing)
+    minOnsetSpacing = fittingConstraints.minOnsetSpacing;
+else
+    minOnsetSpacing = 0.167;
+end
+if minOnsetSpacing<=0
+    error('fittingConstraints.minOnsetSpacing must be > 0');
 end
 
 if size(time,2)>1
@@ -92,6 +101,7 @@ while currentWindowStart < time(end)
     endwindows(w,1) = currentWindowEnd;
 
     thisinds = find(time>=currentWindowStart & time<=currentWindowEnd);
+
     if isempty(thisinds)
         break
     end
@@ -119,6 +129,9 @@ while currentWindowStart < time(end)
     if isempty(submovementInd)
         [~,submovementInd] = min(windowErrors);
     end
+    %if windowErrors(submovementInd)>0.2
+    %    keyboard
+    %end
     numSubmovements = submovementRange(submovementInd);
 
     % parameters are [t0 D A]
@@ -129,8 +142,9 @@ while currentWindowStart < time(end)
         thisAs = submovementParameters(:,3);
         thisendtimes = thist0s+thisDs;
 
+        % Keep mask is those that end before the end of the current window
         keepMask = thisendtimes <= currentWindowEnd;
-        deferredMask = ~keepMask;
+        deferredMask = ~keepMask & thist0s>currentWindowStart+fittingConstraints.minWindowSize;
 
         if any(deferredMask)
             nextWindowStart = min(thist0s(deferredMask));
@@ -146,25 +160,48 @@ while currentWindowStart < time(end)
             nextWindowStart = currentWindowEnd;
         end
         acceptedParameters = [thist0s(keepMask) thisDs(keepMask) thisAs(keepMask)];
-        acceptedLocalParameters = [acceptedParameters(:,1)-thistime(1) acceptedParameters(:,2) acceptedParameters(:,3)];
+
+        % Enforce onset spacing against already accepted submovements from previous windows.
+        % if ~isempty(acceptedParameters)
+        %     if isempty(t0s)
+        %         previousOnset = -inf;
+        %     else
+        %         previousOnset = t0s(end);
+        %     end
+        %     spacingKeep = false(size(acceptedParameters,1),1);
+        %     for kk=1:size(acceptedParameters,1)
+        %         if acceptedParameters(kk,1) - previousOnset >= minOnsetSpacing-eps
+        %             spacingKeep(kk) = true;
+        %             previousOnset = acceptedParameters(kk,1);
+        %         end
+        %     end
+        %     acceptedParameters = acceptedParameters(spacingKeep,:);
+        % end
+
+        if isempty(acceptedParameters)
+            acceptedLocalParameters = [];
+        else
+            acceptedLocalParameters = [acceptedParameters(:,1)-thistime(1) acceptedParameters(:,2) acceptedParameters(:,3)];
+        end
     else
         acceptedParameters = [];
         acceptedLocalParameters = [];
     end
 
-
+    thistime_aftercut = time(time>=startwindows(w,1) & time<=endwindows(w,1));
+    thisvel_aftercut = vel(time>=startwindows(w,1) & time<=endwindows(w,1));
     if isempty(acceptedParameters)
         bestErrors{w} = NaN;
         bestParameters{w} = [];
-        bestVelocity{w} = zeros(size(thistime));
+        bestVelocity{w} = zeros(size(thistime_aftercut));
     else
-        currentBestVelocity = zeros(size(thistime));
+        currentBestVelocity = zeros(size(thistime_aftercut));
         for k=1:size(acceptedLocalParameters,1)
             currentBestVelocity = currentBestVelocity + minimumJerkVelocity1D(...
                 acceptedLocalParameters(k,1),acceptedLocalParameters(k,2),acceptedLocalParameters(k,3),...
-                thistime-thistime(1))';
+                thistime_aftercut-thistime_aftercut(1))';
         end
-        currentBestError = sum((currentBestVelocity - thisvel).^2) / max(sum(thisvel.^2),1);
+        currentBestError = sum((currentBestVelocity - thisvel_aftercut).^2) / max(sum(thisvel_aftercut.^2),1);
 
         bestErrors{w} = currentBestError;
         bestParameters{w} = reshape(acceptedParameters',1,[]);

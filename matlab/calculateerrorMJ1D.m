@@ -4,7 +4,7 @@ function [epsilon,grad,hess,sumpredicted,predicted] = calculateerrorMJ1D(paramet
 %
 % [epsilon,grad,hess,sumpredicted,predicted] =  calculateerrorMJ1D(parameters,time,vel,timedelta)
 %
-% The error is defined by (vel - pred)^2
+% The error is defined by (vel - pred)^2 + (abs(vel) - abs(pred))^2
 %
 % The function also optionally returns the gradient and Hessian
 % (first-order and second-order partial derivatives), for use with
@@ -23,7 +23,7 @@ function [epsilon,grad,hess,sumpredicted,predicted] = calculateerrorMJ1D(paramet
 %
 % timedelta (optional, default = 0.005) is the time points to evaluate and
 % compare the trajectories. It should match the time data [i.e. timedelta=time(2) - time(1)]
-
+%
 % Jason Friedman, 2026
 % www.curiousjason.com
 
@@ -50,17 +50,29 @@ if lasttime > time(end)
 end
 
 trajectory = vel(:,1);
+T = length(time);
+np = 3*numsubmovements;
 
-predicted = zeros(numsubmovements,length(time));
+predicted = zeros(numsubmovements,T);
 
-J = zeros(numsubmovements,3*numsubmovements,length(time));
-H = zeros(numsubmovements,3*numsubmovements,3*numsubmovements,length(time));
+% sumJ/sumH are built directly in their final (block-diagonal) shape -
+% each submovement only ever contributes to its own 3 columns/rows, so
+% the extra "numsubmovements" leading dimension used previously (and then
+% summed away) just wasted an N-fold amount of memory and computation.
+if nargout>1
+    sumJ = zeros(np,T);
+end
+if nargout>2
+    sumH = zeros(np,np,T);
+    sumabsH = zeros(np,np,T);
+end
 
 for k=1:numsubmovements
     % There are 3 parameters per submovement
     T0 = parameters(k*3-2);
     D =  parameters(k*3-1);
     A =  parameters(k*3);
+    cols = k*3-2:k*3;
 
     % find the appropriate time to calculate this over (T0 <= t <= T0+D)
     thisrng = find(time>=T0 & time<=T0+D);
@@ -68,34 +80,54 @@ for k=1:numsubmovements
     if nargout==1
         predicted(k,thisrng) = minimumJerkVelocity1D(T0,D,A,time(thisrng));
     elseif nargout==2
-        [predicted(k,thisrng),J(k,k*3-2:k*3,thisrng)] = minimumJerkVelocity1D(T0,D,A,time(thisrng));
+        [predicted(k,thisrng),Jk] = minimumJerkVelocity1D(T0,D,A,time(thisrng));
+        sumJ(cols,thisrng) = Jk;
     else
-        [predicted(k,thisrng),J(k,k*3-2:k*3,thisrng),H(k,k*3-2:k*3,k*3-2:k*3,thisrng)] = minimumJerkVelocity1D(T0,D,A,time(thisrng));
+        [predicted(k,thisrng),Jk,Hk] = minimumJerkVelocity1D(T0,D,A,time(thisrng));
+        sumJ(cols,thisrng) = Jk;
+        sumH(cols,cols,thisrng) = Hk;
+        signk = sign(predicted(k,thisrng));
+        sumabsH(cols,cols,thisrng) = Hk .* reshape(signk,[1 1 numel(thisrng)]);
     end
 end
 
 sumpredicted = sum(predicted,1)';
-sumtrajsq = sum(trajectory.^2);
+sumabspredicted = sum(abs(predicted),1)';
+sumtrajsq  = sum(trajectory.^2);
 if sumtrajsq==0
     sumtrajsq = 1;
 end
 
 if nargout>1
-    sumJ = squeeze(sum(J,1));
+    signpredicted = sign(predicted);
+    sumabsJ = zeros(np,T);
+    for k=1:numsubmovements
+        cols = k*3-2:k*3;
+        sumabsJ(cols,:) = sumJ(cols,:) .* signpredicted(k,:);
+    end
 
-    for k=1:size(sumJ,1)
-        grad(k,1) = 2/sumtrajsq * sum((sumpredicted - trajectory).*sumJ(k,:)');
+    errTerm = sumpredicted - trajectory;
+    absErrTerm = sumabspredicted - abs(trajectory);
+
+    grad = zeros(np,1);
+    for k=1:np
+        grad(k,1) = 2/sumtrajsq * sum(...
+            errTerm.*sumJ(k,:)' + ...
+            absErrTerm.*sumabsJ(k,:)');
     end
 
     if nargout>2
-        sumH = squeeze(sum(H,1));
-        for i=1:size(sumH,1)
-            for j=1:size(sumH,2)
+        hess = zeros(np,np);
+        for i=1:np
+            for j=1:np
                 hess(i,j) = 2/sumtrajsq * sum(...
-                    sumJ(i,:).*sumJ(j,:) + ((sumpredicted - trajectory).* squeeze(sumH(i,j,:)))');
+                    sumJ(i,:).*sumJ(j,:) + (errTerm.* squeeze(sumH(i,j,:)))' + ...
+                    sumabsJ(i,:).*sumabsJ(j,:) + (absErrTerm.* squeeze(sumabsH(i,j,:)))');
             end
         end
     end
 end
 
-epsilon = sum((sumpredicted - trajectory).^2) ./ sumtrajsq;
+epsilon = sum((sumpredicted - trajectory).^2 + ...
+    (sumabspredicted-abs(trajectory)).^2) ./ sumtrajsq;
+end

@@ -1,6 +1,6 @@
 % CALCULATEOVERLAP - Calculate temporal overlap between submovements
 %
-% overlap = calculateOverlap(parameters) 
+% overlaps = calculateOverlap(parameters) 
 %
 % parameters should be an N * p matrix
 % with N repetitions of the task, and p = 4 * submovements

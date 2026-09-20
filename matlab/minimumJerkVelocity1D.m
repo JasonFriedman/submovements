@@ -47,6 +47,12 @@ if nargout > 1
     J(3,r) = (30.*(t(r)-t0).^2)./D.^3-(60.*(t(r)-t0).^3)./D.^4+(30.*(t(r)-t0).^4)./D.^5;
         
     if nargout >2
+        % must be preallocated to the full length of t (like J above) -
+        % otherwise, when r does not include the last element of t (which
+        % happens whenever the final sample falls just outside t0..t0+D
+        % due to floating-point rounding), H would be auto-grown to a
+        % truncated size instead of numel(t).
+        H = zeros(3,3,numel(t));
         H(1,1,r) = A.*(60./D.^3-(360.*(t(r)-t0))./D.^4+(360.*(t(r)-t0).^2)./D.^5);      
         H(2,1,r) = A.*((180.*(t(r)-t0))./D.^4-(720.*(t(r)-t0).^2)./D.^5+(600.*(t(r)-t0).^3)./D.^6);
         H(3,1,r) = -(60.*(t(r)-t0))./D.^3+(180.*(t(r)-t0).^2)./D.^4-(120.*(t(r)-t0).^3)./D.^5;

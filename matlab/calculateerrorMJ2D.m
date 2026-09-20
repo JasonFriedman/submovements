@@ -17,7 +17,7 @@ function [epsilon,grad,hess,sumpredicted,predictedx,predictedy] = calculateerror
 % each 4 parameters is T0 (onset time in seconds), D (duration in seconds),
 % Ax (x amplitude) and Ay (y amplitude)
 %
-% time should be a 1 * N vector with the time of the recorded movement (in seconds)
+% time should be a N * 1 vector with the time of the recorded movement (in seconds)
 %
 % vel should be an N * 2 vector with the x and y velocities
 %
